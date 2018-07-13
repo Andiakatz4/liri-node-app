@@ -1,5 +1,6 @@
 require("dotenv").config();
 var keys = require("./keys.js");
+var request = require("request");
 
 //var spotify = new Spotify(keys.spotify);
 
@@ -7,18 +8,10 @@ var Twitter = require('twitter');
 var client = new Twitter(keys.twitter);
 var fs = require("fs");
 
-var userInput = process.argv[2];
-var userCommand = process.argv[3];
+var Spotify = require('node-spotify-api');
 
-switch (userCommand) {
-  case "show-tweets":
-    getTweets(userInput)
-    break;
+var spotify = new Spotify(keys.spotify);
 
-  default:
-    console.log("Show Tweets");
-
-}
 
 function getTweets(userName) {
   var params = { screen_name: userName };
@@ -44,46 +37,64 @@ function getTweets(userName) {
   });
 }
 
-var Spotify = require('node-spotify-api');
 
-var spotify = new Spotify({
-  id: process.env.SPOTIFY_ID,
-  secret: process.env.SPOTIFY_SECRET
-      });
-      
-spotify.search({type: 'track', query: 'All the Small Things' }, function(err, data) {
+// wrtie a function for this wrapping up this code
+spotify.search({ type: 'track', query: 'All the Small Things' }, function (err, data) {
   if (err) {
     return console.log('Error occurred: ' + err);
+  }
+
+  console.log(data);
+});
+
+
+function getMovies(movieName) {
+  // var params = { title, year, rating, country, language, plot, actors }
+  // Then run a request to the OMDB API with the movie specified
+  request("http://www.omdbapi.com/?t=" + movieName + "&y=&plot=short&apikey=trilogy", function (error, response, body) {
+
+    // If the request is successful (i.e. if the response status code is 200)
+    if (!error && response.statusCode === 200) {
+      var movieObj = JSON.parse(body);
+      console.log(movieObj);
+      // Parse the body of the site and recover just the imdbRating
+      // (Note: The syntax below for parsing isn't obvious. Just spend a few moments dissecting it).
+      console.log("The movie's rating is: " + movieObj.imdbRating);
     }
-   
-  console.log(data); 
-});
 
-var request = require("request");
+    // var fs = require("fs");
 
-// Then run a request to the OMDB API with the movie specified
-request("http://www.omdbapi.com/?t=remember+the+titans&y=&plot=short&apikey=trilogy", function(error, response, body) {
+    // // Using the `fs` Node package, LIRI will take the text inside of random.txt and then use it to call one of LIRI's commands.// It will then print "Inception, Die Hard" in the file
+    // fs.writeFile("random.txt", "Inception, Die Hard", function (err) {
 
-  // If the request is successful (i.e. if the response status code is 200)
-  if (!error && response.statusCode === 200) {
+    //   // If the code experiences any errors it will log the error to the console.
+    //   if (err) {
+    //     return console.log(err);
+    //   }
 
-    // Parse the body of the site and recover just the imdbRating
-    // (Note: The syntax below for parsing isn't obvious. Just spend a few moments dissecting it).
-    console.log("The movie's rating is: " + JSON.parse(body).imdbRating);
-  }
-});
+    //   // Otherwise, it will print: "random.txt was updated!"
+    //   console.log("random.txt was updated!");
 
-var fs = require("fs");
+    // });
+  });
+}
 
-// Using the `fs` Node package, LIRI will take the text inside of random.txt and then use it to call one of LIRI's commands.// It will then print "Inception, Die Hard" in the file
-fs.writeFile("random.txt", "Inception, Die Hard", function(err) {
 
-  // If the code experiences any errors it will log the error to the console.
-  if (err) {
-    return console.log(err);
-  }
+var liriCommand = process.argv[2];
+var liriParameter = process.argv[3];
 
-  // Otherwise, it will print: "random.txt was updated!"
-  console.log("random.txt was updated!");
+switch (liriCommand) {
+  case "show-tweets":
+    getTweets(liriParameter)
+    break;
 
-});
+  case "movie-this":
+    getMovies(liriParameter);
+    break;
+
+  // add the case 
+    //call the function
+
+  default:
+    console.log("hit default case");
+}
